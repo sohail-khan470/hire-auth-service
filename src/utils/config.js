@@ -4,8 +4,8 @@ require("dotenv").config();
 module.exports = {
   // App
   NODE_ENV: process.env.NODE_ENV || "development",
-  PORT: Number(process.env.PORT) || 4100,
-  API_GATEWAY_URL: process.env.API_GATEWAY_URL || "http://localhost:4100",
+  PORT: Number(process.env.PORT) || 4102,
+  API_GATEWAY_URL: process.env.API_GATEWAY_URL || "http://localhost:4102",
 
   // Security
   GATEWAY_JWT_TOKEN: process.env.GATEWAY_JWT_TOKEN,
@@ -27,4 +27,7 @@ module.exports = {
   ELASTIC_SEARCH_URL: process.env.ELASTIC_SEARCH_URL,
   ELASTIC_APM_SERVER_URL: process.env.ELASTIC_APM_SERVER_URL,
   ELASTIC_APM_SECRET_TOKEN: process.env.ELASTIC_APM_SECRET_TOKEN,
+
+  // Logger
+  LOG_LEVEL: process.env.LOG_LEVEL || "info",
 };
