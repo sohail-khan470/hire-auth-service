@@ -2,11 +2,28 @@ const express = require("express");
 const config = require("./src/utils/config");
 const logger = require("./src/utils/logger");
 const elasticsearchClient = require("./src/utils/elasticsearch");
+const hpp = require("hpp");
+const helmet = require("helmet");
+const cors = require("cors");
+const compression = require("compression");
 
 const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(hpp());
+app.use(helmet());
+app.set("trust proxy", 1);
+app.set(express.urlencoded({ extended: true }));
+app.use(compression());
+app.use(express.json());
+app.use(
+  cors({
+    origin: config.API_GATEWAY_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  })
+);
 
 // Basic route
 app.get("/", (req, res) => {

@@ -6,8 +6,9 @@ module.exports = {
      App
   ======================= */
   NODE_ENV: process.env.NODE_ENV || "development",
-  PORT: Number(process.env.PORT) || 4103,
+  PORT: Number(process.env.PORT) || 4102,
   API_GATEWAY_URL: process.env.API_GATEWAY_URL || "http://localhost:4100",
+  JWT_TOKEN_SECRET: process.env.JWT_TOKEN_SECRET,
 
   /* =======================
      Security
@@ -18,7 +19,6 @@ module.exports = {
      Infra
   ======================= */
   RABBITMQ_ENDPOINT: process.env.RABBITMQ_ENDPOINT,
-  REDIS_HOST: process.env.REDIS_HOST || null,
 
   /* =======================
      Database
