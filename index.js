@@ -46,12 +46,17 @@ app.listen(PORT, () => {
   logger.info(`Authentication service listening on port ${PORT}`);
 });
 
-// Test Elasticsearch connection
-elasticsearchClient
-  .ping()
-  .then(() => logger.info("Elasticsearch connection successful"))
-  .catch((err) =>
-    logger.error("Elasticsearch connection failed", { error: err.message })
-  );
+// Test Elasticsearch connection if client is available
+if (elasticsearchClient) {
+  elasticsearchClient
+    .ping()
+    .then(() => logger.info("Elasticsearch connection successful"))
+    .catch((err) => {
+      console.log(err);
+      logger.error("Elasticsearch connection failed", { error: err.message });
+    });
+} else {
+  logger.info("Elasticsearch not configured, skipping connection test");
+}
 
 module.exports = app;

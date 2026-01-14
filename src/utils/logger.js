@@ -2,24 +2,38 @@ const winston = require("winston");
 const { ElasticsearchTransport } = require("winston-elasticsearch");
 const config = require("./config");
 
-const esTransportOpts = {
-  level: "info",
-  clientOpts: {
-    node: config.ELASTIC_SEARCH_URL,
-    // Add auth if needed
-  },
-  indexPrefix: "authentication-service-logs",
-  indexSuffixPattern: "YYYY-MM-DD",
-  transformer: (logData) => {
-    return {
-      "@timestamp": new Date().toISOString(),
-      severity: logData.level,
-      message: logData.message,
-      fields: logData.meta || {},
-      service: "authentication-service",
-    };
-  },
-};
+const transports = [
+  // Console transport for development
+  new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.simple()
+    ),
+  }),
+];
+
+// Conditionally add Elasticsearch transport if URL is provided
+if (config.ELASTIC_SEARCH_URL) {
+  const esTransportOpts = {
+    level: "info",
+    clientOpts: {
+      node: config.ELASTIC_SEARCH_URL,
+      // Add auth if needed
+    },
+    indexPrefix: "authentication-service-logs",
+    indexSuffixPattern: "YYYY-MM-DD",
+    transformer: (logData) => {
+      return {
+        "@timestamp": new Date().toISOString(),
+        severity: logData.level,
+        message: logData.message,
+        fields: logData.meta || {},
+        service: "authentication-service",
+      };
+    },
+  };
+  transports.push(new ElasticsearchTransport(esTransportOpts));
+}
 
 const logger = winston.createLogger({
   level: config.LOG_LEVEL,
@@ -29,17 +43,7 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: { service: "authentication-service" },
-  transports: [
-    // Console transport for development
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-    }),
-    // Elasticsearch transport for Kibana
-    new ElasticsearchTransport(esTransportOpts),
-  ],
+  transports: transports,
 });
 
 // Handle transport errors
