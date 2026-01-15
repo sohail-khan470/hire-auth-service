@@ -6,6 +6,7 @@ const hpp = require("hpp");
 const helmet = require("helmet");
 const cors = require("cors");
 const compression = require("compression");
+const { rabbitmq } = require("./src/queues/rabbitmq");
 
 const app = express();
 
@@ -57,11 +58,19 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal Server Error" });
 });
 
+//Start Rabbitmq
+
 // Start server
 const PORT = config.PORT;
-app.listen(PORT, () => {
-  logger.info(`Authentication service listening on port ${PORT}`);
-});
+
+const startServer = async () => {
+  await rabbitmq.connect();
+  app.listen(PORT, () => {
+    logger.info(`Authentication service listening on port ${PORT}`);
+  });
+};
+
+startServer();
 
 // Test Elasticsearch connection if client is available
 if (elasticsearchClient) {
