@@ -10,6 +10,21 @@ const { rabbitmq } = require("./src/queues/rabbitmq");
 
 const app = express();
 
+async function startConsumers() {
+  try {
+    logger.info("Starting RabbitMQ consumers...");
+
+    // Start all your consumers
+    await EmailConsumer.start();
+    await UserEventsConsumer.start();
+
+    logger.info("All consumers started successfully");
+  } catch (error) {
+    logger.error("Failed to start consumers", { error: error.message });
+    process.exit(1);
+  }
+}
+
 // Middleware
 app.use(express.json());
 app.use(hpp());
