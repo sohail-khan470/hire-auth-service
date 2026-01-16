@@ -6,33 +6,20 @@ const hpp = require("hpp");
 const helmet = require("helmet");
 const cors = require("cors");
 const compression = require("compression");
+
 const { rabbitmq } = require("./src/queues/rabbitmq");
+const EmailConsumer = require("./src/queues/consumers/email.consumer");
+const UserEventsConsumer = require("./src/queues/consumers/user-events.consumer");
 
 const app = express();
 
-async function startConsumers() {
-  try {
-    logger.info("Starting RabbitMQ consumers...");
-
-    // Start all your consumers
-    await EmailConsumer.start();
-    await UserEventsConsumer.start();
-
-    logger.info("All consumers started successfully");
-  } catch (error) {
-    logger.error("Failed to start consumers", { error: error.message });
-    process.exit(1);
-  }
-}
-
-// Middleware
+/* -------------------- Middleware -------------------- */
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(hpp());
 app.use(helmet());
 app.set("trust proxy", 1);
-app.set(express.urlencoded({ extended: true }));
 app.use(compression());
-app.use(express.json());
 app.use(
   cors({
     origin: config.API_GATEWAY_URL,
@@ -41,7 +28,7 @@ app.use(
   })
 );
 
-// Basic route
+/* -------------------- Routes -------------------- */
 app.get("/", (req, res) => {
   logger.info("Root endpoint accessed", {
     ip: req.ip,
@@ -50,20 +37,20 @@ app.get("/", (req, res) => {
   res.json({ message: "Authentication Service is running" });
 });
 
-// Health check
 app.get("/health", (req, res) => {
   logger.info("Health check endpoint accessed");
   res.json({ status: "OK", service: "authentication-service" });
 });
 
-// Example route with logging
 app.post("/auth/login", (req, res) => {
-  logger.info("Login attempt", { email: req.body.email, ip: req.ip });
-  // Placeholder for actual login logic
+  logger.info("Login attempt", {
+    email: req.body.email,
+    ip: req.ip,
+  });
   res.json({ message: "Login endpoint" });
 });
 
-// Error handling middleware
+/* -------------------- Error Handler -------------------- */
 app.use((err, req, res, next) => {
   logger.error("Unhandled error", {
     error: err.message,
@@ -73,28 +60,76 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Internal Server Error" });
 });
 
-//Start Rabbitmq
+/* -------------------- RabbitMQ Consumers -------------------- */
+async function startConsumers() {
+  try {
+    logger.info("Starting RabbitMQ consumers...");
 
-// Start server
+    await EmailConsumer.start();
+    await UserEventsConsumer.start();
+
+    logger.info("All RabbitMQ consumers started");
+  } catch (error) {
+    logger.error("Failed to start consumers", {
+      error: error.message,
+    });
+    throw error;
+  }
+}
+
+/* -------------------- Server Bootstrap -------------------- */
 const PORT = config.PORT;
+let server;
 
-const startServer = async () => {
-  await rabbitmq.connect();
-  app.listen(PORT, () => {
-    logger.info(`Authentication service listening on port ${PORT}`);
-  });
-};
+async function startServer() {
+  try {
+    // 1️⃣ Connect RabbitMQ
+    await rabbitmq.connect();
+    logger.info("RabbitMQ connected");
+
+    // 2️⃣ Start consumers
+    await startConsumers();
+
+    // 3️⃣ Start HTTP server
+    server = app.listen(PORT, () => {
+      logger.info(`Authentication service listening on port ${PORT}`);
+    });
+  } catch (error) {
+    logger.error("Failed to start server", { error: error.message });
+    process.exit(1);
+  }
+}
 
 startServer();
 
-// Test Elasticsearch connection if client is available
+/* -------------------- Graceful Shutdown -------------------- */
+async function shutdown(signal) {
+  logger.info(`Received ${signal}. Shutting down...`);
+
+  if (server) {
+    server.close(async () => {
+      await rabbitmq.close();
+      logger.info("Server shutdown complete");
+      process.exit(0);
+    });
+  } else {
+    await rabbitmq.close();
+    process.exit(0);
+  }
+}
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+
+/* -------------------- Elasticsearch Check -------------------- */
 if (elasticsearchClient) {
   elasticsearchClient
     .ping()
     .then(() => logger.info("Elasticsearch connection successful"))
     .catch((err) => {
-      console.log(err);
-      logger.error("Elasticsearch connection failed", { error: err.message });
+      logger.error("Elasticsearch connection failed", {
+        error: err.message,
+      });
     });
 } else {
   logger.info("Elasticsearch not configured, skipping connection test");
