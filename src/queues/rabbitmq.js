@@ -46,10 +46,18 @@ async function closeRabbitMQ() {
   }
 }
 
+async function getChannel() {
+  if (!channel) {
+    return await connectRabbitMQ();
+  }
+  return channel;
+}
+
 process.on("SIGINT", closeRabbitMQ);
 process.on("SIGTERM", closeRabbitMQ);
 
 module.exports = {
   connectRabbitMQ,
   closeRabbitMQ,
+  getChannel,
 };
