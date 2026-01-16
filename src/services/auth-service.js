@@ -5,7 +5,21 @@ const { getChannel } = require("../queues/rabbitmq");
 const prisma = new PrismaClient();
 
 const createAuthUser = async (user) => {
-  const result = await prisma.authUser.create(user);
+  const result = await prisma.authUser.create({
+    data: user,
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      country: true,
+      profilePublicId: true,
+      profilePicture: true,
+      emailVerified: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
   const messageDetails = {
     username: result.username,
     email: result.email,
@@ -14,17 +28,17 @@ const createAuthUser = async (user) => {
     createdAt: result.createdAt,
   };
 
-  let channel = await getChannel();
+  const channel = await getChannel();
 
   await publishDirectMessage(
     channel,
     "jobber-buyer-update",
     "user-buyer",
-    JSON.stringify(messageDetails),
-    "Buyer details send to the buyer service"
+    messageDetails,
+    "Buyer details sent to the buyer service"
   );
 
-  return result;
+  return result; // 🔒 password is NOT here
 };
 
 module.exports = {
