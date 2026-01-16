@@ -1,49 +1,54 @@
-// src/services/message-producer.js
+const amqp = require("amqplib");
 const config = require("../utils/config");
 const logger = require("../utils/logger");
-const { rabbitmq } = require("./rabbitmq");
+const { connectRabbitMQ } = require("./rabbitmq");
 
-const amqp = require("amqplib");
+async function publishDirectMessage(
+  channel,
+  exchangeName,
+  routingKey,
+  message,
+  logMessage = "Message published"
+) {
+  try {
+    // 1️⃣ Ensure channel
+    if (!channel) {
+      channel = await connectRabbitMQ();
+    }
 
-let channel = null;
+    // 2️⃣ Assert exchange
+    await channel.assertExchange(exchangeName, "direct", {
+      durable: true,
+    });
 
-const EXCHANGE = "auth.events";
-const ROUTING_KEY = "user.registered";
+    // 3️⃣ Publish message
+    const published = channel.publish(
+      exchangeName,
+      routingKey,
+      Buffer.from(JSON.stringify(message)),
+      {
+        persistent: true,
+        contentType: "application/json",
+      }
+    );
 
-async function init() {
-  if (channel) return channel;
+    if (!published) {
+      logger.warn("RabbitMQ publish returned false (buffer full)");
+    }
 
-  const connection = await amqp.connect(config.RABBITMQ_ENDPOINT);
-  channel = await connection.createChannel();
+    logger.info(`${logMessage} | exchange=${exchangeName}, key=${routingKey}`);
+  } catch (error) {
+    logger.error("RabbitMQ publish error", {
+      error: error.message,
+      exchangeName,
+      routingKey,
+      message,
+    });
 
-  // Ensure exchange exists
-  await channel.assertExchange(EXCHANGE, "direct", { durable: true });
-
-  // Clean exit
-  process.on("SIGINT", async () => {
-    await channel?.close();
-    await connection?.close();
-    process.exit(0);
-  });
-
-  return channel;
+    throw error;
+  }
 }
 
-async function publish(payload) {
-  const ch = await init();
-
-  ch.publish(EXCHANGE, ROUTING_KEY, Buffer.from(JSON.stringify(payload)), {
-    persistent: true,
-    contentType: "application/json",
-  });
-
-  logger.info(`📤 Published ${ROUTING_KEY} to ${EXCHANGE}`);
-}
-
-// Optional: expose a start function if you want to pre-connect on service start
-async function start() {
-  await init();
-  logger.info("✅ Producer ready");
-}
-
-module.exports = { publish, start };
+module.exports = {
+  publishDirectMessage,
+};
