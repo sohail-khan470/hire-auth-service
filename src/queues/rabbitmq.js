@@ -29,6 +29,7 @@ async function connectRabbitMQ() {
 
     return channel;
   } catch (error) {
+    console.log(error);
     logger.error("❌ Failed to connect to RabbitMQ", error);
     throw error;
   }
