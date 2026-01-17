@@ -13,25 +13,19 @@ datasource db {
 }
 
 model AuthUser {
-  id BigInt @id @default(autoincrement())
-
-  username String @unique
-  email    String @unique
-  password String
-
-  country String?
-
-  profilePublicId String?
-  profilePicture  String?
-
+  id                     BigInt    @id @default(autoincrement())
+  username               String    @unique
+  email                  String    @unique
+  password               String
+  country                String?
+  profilePublicId        String?
+  profilePicture         String?
   emailVerificationToken String?
-  emailVerified          Boolean @default(false)
-
-  passwordResetToken   String?
-  passwordResetExpires DateTime?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  emailVerified          Boolean   @default(false)
+  passwordResetToken     String?
+  passwordResetExpires   DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   @@map("auth_users")
 }
