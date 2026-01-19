@@ -1,10 +1,21 @@
-const jwt = require("jsonwebtoken");
-const config = require("./config");
+const { verifyToken } = require("./jwtService");
 
 const authMiddleware = async (req, res, next) => {
-  if (req.headers.authorization) {
+  try {
+    if (!req.headers.authorization) {
+      return res.status(401).json({ message: "Authorization header missing" });
+    }
+
     const token = req.headers.authorization.split(" ")[1];
-    const payload = await jwt.verify(token, config.JWT_TOKEN_SECRET);
+    if (!token) {
+      return res.status(401).json({ message: "Token missing" });
+    }
+
+    const payload = verifyToken(token);
+    req.user = payload; // Attach user info to request
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: error.message });
   }
 };
 
