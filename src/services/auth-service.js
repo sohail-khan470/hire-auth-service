@@ -2,6 +2,8 @@ const { PrismaClient } = require("@prisma/client");
 const { CREATED } = require("http-status-codes");
 const { publishDirectMessage } = require("../queues/auth-producer");
 const { getChannel } = require("../queues/rabbitmq");
+const { signToken } = require("../utils/jwtService");
+const config = require("../utils/config");
 const prisma = new PrismaClient();
 
 const createAuthUser = async (user) => {
@@ -134,6 +136,32 @@ const updateVerifyEmailField = async (
   });
 };
 
+const getUserByUsernameOrEmail = async (username, email) => {
+  return await prisma.authUser.findFirst({
+    where: {
+      OR: [{ username }, { email }],
+    },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      country: true,
+      profilePublicId: true,
+      profilePicture: true,
+      emailVerified: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+};
+
+const signJWT = async (id, email, username) => {
+  const token = await signToken(
+    { id, email, username },
+    config.JWT_TOKEN_SECRET,
+  );
+};
+
 module.exports = {
   createAuthUser,
   getAuthUserByUsername,
@@ -141,4 +169,5 @@ module.exports = {
   getAuthUserByVerificationToken,
   getAuthUserByPasswordToken,
   updateVerifyEmailField,
+  getUserByUsernameOrEmail,
 };
