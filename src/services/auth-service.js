@@ -19,11 +19,6 @@ const USER_SELECT_FIELDS = {
   updatedAt: true,
 };
 
-/**
- * Creates a new authenticated user and publishes creation event
- * @param {Object} user - User data to create
- * @returns {Object} Created user data
- */
 const createAuthUser = async (user) => {
   try {
     const result = await prisma.authUser.create({
@@ -55,11 +50,6 @@ const createAuthUser = async (user) => {
   }
 };
 
-/**
- * Retrieves a user by username
- * @param {string} username - Username to search for
- * @returns {Object|null} User data or null if not found
- */
 const getAuthUserByUsername = async (username) => {
   try {
     return await prisma.authUser.findUnique({
@@ -71,11 +61,6 @@ const getAuthUserByUsername = async (username) => {
   }
 };
 
-/**
- * Retrieves a user by email
- * @param {string} email - Email to search for
- * @returns {Object|null} User data or null if not found
- */
 const getAuthUserByEmail = async (email) => {
   try {
     return await prisma.authUser.findUnique({
@@ -87,11 +72,6 @@ const getAuthUserByEmail = async (email) => {
   }
 };
 
-/**
- * Retrieves a user by email verification token
- * @param {string} token - Verification token
- * @returns {Object|null} User data or null if not found
- */
 const getAuthUserByVerificationToken = async (token) => {
   try {
     return await prisma.authUser.findFirst({
@@ -103,11 +83,6 @@ const getAuthUserByVerificationToken = async (token) => {
   }
 };
 
-/**
- * Retrieves a user by password reset token
- * @param {string} token - Password reset token
- * @returns {Object|null} User data or null if not found
- */
 const getAuthUserByPasswordToken = async (token) => {
   try {
     return await prisma.authUser.findFirst({
@@ -119,13 +94,6 @@ const getAuthUserByPasswordToken = async (token) => {
   }
 };
 
-/**
- * Updates email verification fields for a user
- * @param {string} id - User ID
- * @param {boolean} emailVerified - Verification status
- * @param {string|null} emailVerificationToken - Verification token
- * @returns {Object} Updated user data
- */
 const updateVerifyEmailField = async (
   id,
   emailVerified,
@@ -145,12 +113,6 @@ const updateVerifyEmailField = async (
   }
 };
 
-/**
- * Retrieves a user by username or email
- * @param {string} username - Username to search
- * @param {string} email - Email to search
- * @returns {Object|null} User data or null if not found
- */
 const getUserByUsernameOrEmail = async (username, email) => {
   try {
     return await prisma.authUser.findFirst({
@@ -164,13 +126,6 @@ const getUserByUsernameOrEmail = async (username, email) => {
   }
 };
 
-/**
- * Generates a JWT token for authenticated users
- * @param {string} id - User ID
- * @param {string} email - User email
- * @param {string} username - Username
- * @returns {string} JWT token
- */
 const signJWT = async (id, email, username) => {
   try {
     const token = signToken({ id, email, username }, config.JWT_TOKEN_SECRET);
