@@ -1,6 +1,6 @@
 // src/config/elasticsearch.js
 const { Client } = require("@elastic/elasticsearch");
-const config = require("./config");
+const config = require("../config/server-config");
 const logger = require("./logger");
 
 let client = null;

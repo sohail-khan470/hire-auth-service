@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const { publishDirectMessage } = require("../queues/auth-producer");
 const { getChannel } = require("../queues/rabbitmq");
 const { signToken } = require("../utils/jwtService");
-const config = require("../utils/config");
+const config = require("../config/server-config");
 const { createError } = require("./error-service");
 const prisma = new PrismaClient();
 

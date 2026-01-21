@@ -1,5 +1,5 @@
 const amqp = require("amqplib");
-const config = require("../utils/config");
+const config = require("../config/server-config");
 const logger = require("../utils/logger");
 const { connectRabbitMQ } = require("./rabbitmq");
 
@@ -8,7 +8,7 @@ async function publishDirectMessage(
   exchangeName,
   routingKey,
   message,
-  logMessage = "Message published"
+  logMessage = "Message published",
 ) {
   try {
     // 1️⃣ Ensure channel
@@ -29,7 +29,7 @@ async function publishDirectMessage(
       {
         persistent: true,
         contentType: "application/json",
-      }
+      },
     );
 
     if (!published) {

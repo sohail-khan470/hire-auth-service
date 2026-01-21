@@ -19,6 +19,7 @@ module.exports = {
      Infra
   ======================= */
   RABBITMQ_ENDPOINT: process.env.RABBITMQ_ENDPOINT,
+  RABBITMQ_EXCHANGE: process.env.RABBITMQ_EXCHANGE,
 
   /* =======================
      Database

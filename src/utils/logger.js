@@ -1,13 +1,13 @@
 const winston = require("winston");
 const { ElasticsearchTransport } = require("winston-elasticsearch");
-const config = require("./config");
+const config = require("../config/server-config");
 
 const transports = [
   // Console transport for development
   new winston.transports.Console({
     format: winston.format.combine(
       winston.format.colorize(),
-      winston.format.simple()
+      winston.format.simple(),
     ),
   }),
 ];
@@ -40,7 +40,7 @@ const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.errors({ stack: true }),
-    winston.format.json()
+    winston.format.json(),
   ),
   defaultMeta: { service: "authentication-service" },
   transports: transports,

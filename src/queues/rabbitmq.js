@@ -1,5 +1,5 @@
 const amqp = require("amqplib");
-const config = require("../utils/config");
+const config = require("../config/server-config");
 const logger = require("../utils/logger");
 
 let connection = null;

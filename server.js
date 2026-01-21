@@ -1,5 +1,5 @@
 const express = require("express");
-const config = require("./src/utils/config");
+const config = require("./src/config/server-config");
 const logger = require("./src/utils/logger");
 const elasticsearchClient = require("./src/utils/elasticsearch");
 const hpp = require("hpp");
@@ -24,7 +24,7 @@ app.use(
     origin: config.API_GATEWAY_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  })
+  }),
 );
 
 /* -------------------- Routes -------------------- */
