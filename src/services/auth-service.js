@@ -19,7 +19,7 @@ const USER_SELECT_FIELDS = {
   updatedAt: true,
 };
 
-const createAuthUser = async (user) => {
+const register = async (user) => {
   try {
     const result = await prisma.authUser.create({
       data: user,
@@ -136,7 +136,7 @@ const signJWT = async (id, email, username) => {
 };
 
 module.exports = {
-  createAuthUser,
+  register,
   getAuthUserByUsername,
   getAuthUserByEmail,
   getAuthUserByVerificationToken,

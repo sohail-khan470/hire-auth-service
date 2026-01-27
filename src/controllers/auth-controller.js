@@ -1,5 +1,5 @@
 const {
-  createAuthUser,
+  register,
   getUserByUsernameOrEmail,
 } = require("../services/auth-service");
 const { handleAsync, handleError } = require("../services/error-service");
@@ -7,7 +7,7 @@ const { hashPassword } = require("../utils/hashService");
 const { StatusCodes } = require("http-status-codes");
 const logger = require("../utils/logger");
 
-const createAuthUserController = handleAsync(async (req, res) => {
+const register = handleAsync(async (req, res) => {
   const { username, email, password, country } = req.body;
 
   if (!username || !email || !password) {
@@ -40,7 +40,7 @@ const createAuthUserController = handleAsync(async (req, res) => {
       }
     : null;
 
-  const user = await createAuthUser({
+  const user = await register({
     username,
     email,
     password: hashedPassword,
@@ -64,4 +64,4 @@ const createAuthUserController = handleAsync(async (req, res) => {
   });
 });
 
-module.exports = { createAuthUserController };
+module.exports = { register };
