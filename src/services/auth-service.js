@@ -4,6 +4,7 @@ const { getChannel } = require("../queues/rabbitmq");
 const { signToken } = require("../utils/jwtService");
 const config = require("../config/server-config");
 const { createError } = require("./error-service");
+const { USER_CREATED } = require("../constants/routing-keys");
 const prisma = new PrismaClient();
 
 // Common user fields for select statements
@@ -33,13 +34,14 @@ const register = async (user) => {
       profilePicture: result.profilePicture,
       country: result.country,
       createdAt: result.createdAt,
+      type: "auth",
     };
 
     const channel = await getChannel();
     await publishDirectMessage(
       channel,
-      "jobber-buyer-update",
-      "user-buyer",
+      config.RABBITMQ_EXCHANGE,
+      USER_CREATED,
       messageDetails,
       "Buyer details sent to the buyer service",
     );
