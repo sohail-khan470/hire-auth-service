@@ -22,33 +22,64 @@ const USER_SELECT_FIELDS = {
 
 const register = async (user) => {
   try {
-    const result = await prisma.authUser.create({
-      data: user,
+    // 1️⃣ Check for existing user
+    const existingUser = await prisma.authUser.findFirst({
+      where: {
+        OR: [{ email: user.email }, { username: user.username }],
+      },
+    });
+
+    if (existingUser) {
+      throw createError("User already exists", 409);
+    }
+
+    // 2️⃣ Create user
+    const createdUser = await prisma.authUser.create({
+      data: {
+        username: user.username,
+        email: user.email,
+        password: user.password, // already hashed
+        country: user.country,
+        profilePicture: user.profilePicture || null,
+        profilePublicId: user.profilePublicId || null,
+        emailVerified: false,
+        emailVerificationToken: user.emailVerificationToken,
+      },
       select: USER_SELECT_FIELDS,
     });
 
-    // Publish user creation event to message queue
+    // 3️⃣ Publish USER_CREATED event
     const messageDetails = {
-      username: result.username,
-      email: result.email,
-      profilePicture: result.profilePicture,
-      country: result.country,
-      createdAt: result.createdAt,
+      userId: createdUser.id,
+      username: createdUser.username,
+      email: createdUser.email,
+      profilePicture: createdUser.profilePicture,
+      country: createdUser.country,
+      createdAt: createdUser.createdAt,
       type: "auth",
     };
 
     const channel = await getChannel();
+
     await publishDirectMessage(
       channel,
       config.RABBITMQ_EXCHANGE,
       USER_CREATED,
       messageDetails,
-      "Buyer details sent to the buyer service",
+      "User created event sent",
     );
 
-    return result;
+    return createdUser;
   } catch (error) {
-    throw createError("Failed to create user", 500);
+    // Prisma unique constraint
+    if (error.code === "P2002") {
+      throw createError("Email or username already exists", 409);
+    }
+
+    throw createError(
+      error.message || "Failed to register user",
+      error.status || 500,
+    );
   }
 };
 
