@@ -45,7 +45,7 @@ const register = async (user) => {
         profilePicture: user.profilePicture || null,
         profilePublicId: user.profilePublicId || null,
         emailVerified: false,
-        emailVerificationToken: user.emailVerificationToken,
+        emailVerificationToken: randomBytes,
       },
       select: USER_SELECT_FIELDS,
     });
