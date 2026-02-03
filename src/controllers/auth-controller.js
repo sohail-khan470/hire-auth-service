@@ -65,4 +65,14 @@ const register = handleAsync(async (req, res) => {
   });
 });
 
-module.exports = { register };
+const updateProfilePicture = async (req, res) => {
+  try {
+    const userId = req.user.id; // from JWT auth middleware
+    const updatedUser = await updateProfilePicture(userId, req.body);
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { register, updateProfilePicture };

@@ -7,6 +7,7 @@ const { createError } = require("./error-service");
 const { USER_CREATED } = require("../constants/routing-keys");
 const prisma = new PrismaClient();
 const crypto = require("crypto");
+const cloudinary = require("../utils/cloudinary");
 
 // Common user fields for select statements
 const USER_SELECT_FIELDS = {
@@ -172,6 +173,40 @@ const signJWT = async (id, email, username) => {
   }
 };
 
+const updateProfilePicture = async (
+  userId,
+  { profilePicture, profilePublicId },
+) => {
+  if (!profilePicture || !profilePublicId) {
+    throw createError("Profile picture data is required", 400);
+  }
+
+  // Fetch user to delete old image
+  const user = await prisma.authUser.findUnique({ where: { id: userId } });
+  if (!user) throw createError("User not found", 404);
+
+  // Delete old image from Cloudinary if exists
+  if (user.profilePublicId) {
+    try {
+      await cloudinary.uploader.destroy(user.profilePublicId);
+    } catch (err) {
+      console.warn("Failed to delete old Cloudinary image:", err.message);
+    }
+  }
+
+  // Update DB with new image info
+  const updatedUser = await prisma.authUser.update({
+    where: { id: userId },
+    data: {
+      profilePicture,
+      profilePublicId,
+    },
+    select: USER_SELECT_FIELDS,
+  });
+
+  return updatedUser;
+};
+
 module.exports = {
   register,
   getAuthUserByUsername,
@@ -180,5 +215,6 @@ module.exports = {
   getAuthUserByPasswordToken,
   updateVerifyEmailField,
   getUserByUsernameOrEmail,
+  updateProfilePicture,
   signJWT,
 };
