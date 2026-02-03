@@ -1,11 +1,9 @@
-const {
-  register,
-  getUserByUsernameOrEmail,
-} = require("../services/auth-service");
+const authService = require("../services/auth-service");
 const { handleAsync, handleError } = require("../services/error-service");
 const { hashPassword } = require("../utils/hashService");
 const { StatusCodes } = require("http-status-codes");
 const logger = require("../utils/logger");
+const crypto = require("crypto");
 
 const register = handleAsync(async (req, res) => {
   const { username, email, password, country } = req.body;
@@ -20,7 +18,10 @@ const register = handleAsync(async (req, res) => {
     );
   }
 
-  const existingUser = await getUserByUsernameOrEmail(username, email);
+  const existingUser = await authService.getUserByUsernameOrEmail(
+    username,
+    email,
+  );
   if (existingUser) {
     return handleError(
       {
@@ -40,7 +41,7 @@ const register = handleAsync(async (req, res) => {
       }
     : null;
 
-  const user = await register({
+  const user = await authService.register({
     username,
     email,
     password: hashedPassword,

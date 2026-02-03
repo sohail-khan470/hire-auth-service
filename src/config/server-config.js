@@ -9,6 +9,7 @@ module.exports = {
   PORT: Number(process.env.PORT) || 4102,
   API_GATEWAY_URL: process.env.API_GATEWAY_URL || "http://localhost:4100",
   JWT_TOKEN_SECRET: process.env.JWT_TOKEN_SECRET,
+  CLIENT_URL: process.env.CLIENT_URL,
 
   /* =======================
      Security

@@ -6,6 +6,7 @@ const config = require("../config/server-config");
 const { createError } = require("./error-service");
 const { USER_CREATED } = require("../constants/routing-keys");
 const prisma = new PrismaClient();
+const crypto = require("crypto");
 
 // Common user fields for select statements
 const USER_SELECT_FIELDS = {
@@ -22,18 +23,18 @@ const USER_SELECT_FIELDS = {
 
 const register = async (user) => {
   try {
-    // 1️⃣ Check for existing user
     const existingUser = await prisma.authUser.findFirst({
       where: {
         OR: [{ email: user.email }, { username: user.username }],
       },
     });
 
+    const randomBytes = crypto.randomBytes(20).toString("hex");
+
     if (existingUser) {
       throw createError("User already exists", 409);
     }
 
-    // 2️⃣ Create user
     const createdUser = await prisma.authUser.create({
       data: {
         username: user.username,
@@ -48,7 +49,6 @@ const register = async (user) => {
       select: USER_SELECT_FIELDS,
     });
 
-    // 3️⃣ Publish USER_CREATED event
     const messageDetails = {
       userId: createdUser.id,
       username: createdUser.username,
@@ -56,6 +56,7 @@ const register = async (user) => {
       profilePicture: createdUser.profilePicture,
       country: createdUser.country,
       createdAt: createdUser.createdAt,
+      emailVerificationToken: randomBytes,
       type: "auth",
     };
 
@@ -127,17 +128,20 @@ const getAuthUserByPasswordToken = async (token) => {
   }
 };
 
-const updateVerifyEmailField = async (
-  id,
-  emailVerified,
-  emailVerificationToken,
-) => {
+const updateVerifyEmailField = async (id, emailVerificationToken) => {
   try {
     return await prisma.authUser.update({
-      where: { id },
-      data: {
-        emailVerified,
+      where: {
+        id,
         emailVerificationToken,
+        emailVerificationExpires: {
+          gte: new Date(),
+        },
+      },
+      data: {
+        emailVerified: true,
+        emailVerificationToken: null,
+        emailVerificationExpires: null,
       },
       select: USER_SELECT_FIELDS,
     });
