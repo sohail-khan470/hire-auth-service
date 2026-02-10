@@ -9,6 +9,7 @@ const compression = require("compression");
 
 const rabbitMQ = require("./src/queues/rabbitmq");
 const authPublisher = require("./src/queues/auth-producer");
+const { AuthRoutes } = require("./src/routes");
 
 const app = express();
 
@@ -28,26 +29,13 @@ app.use(
 );
 
 /* -------------------- Routes -------------------- */
-app.get("/", (req, res) => {
-  logger.info("Root endpoint accessed", {
-    ip: req.ip,
-    userAgent: req.get("User-Agent"),
-  });
-  res.json({ message: "Authentication Service is running" });
-});
 
 app.get("/health", (req, res) => {
   logger.info("Health check endpoint accessed");
   res.json({ status: "OK", service: "authentication-service" });
 });
 
-app.post("/auth/login", (req, res) => {
-  logger.info("Login attempt", {
-    email: req.body.email,
-    ip: req.ip,
-  });
-  res.json({ message: "Login endpoint" });
-});
+app.use("/api/v1", AuthRoutes);
 
 /* -------------------- Error Handler -------------------- */
 app.use((err, req, res, next) => {

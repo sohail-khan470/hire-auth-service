@@ -68,11 +68,19 @@ const register = handleAsync(async (req, res) => {
 const updateProfilePicture = async (req, res) => {
   try {
     const userId = req.user.id; // from JWT auth middleware
-    const updatedUser = await updateProfilePicture(userId, req.body);
+    const updatedUser = await authService.updateProfilePicture(
+      userId,
+      req.body,
+    );
     res.status(200).json(updatedUser);
   } catch (err) {
     next(err);
   }
+};
+
+const verifyEmail = async (req, res) => {
+  try {
+  } catch (error) {}
 };
 
 module.exports = { register, updateProfilePicture };
